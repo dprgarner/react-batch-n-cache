@@ -1,4 +1,3 @@
 // The library entry point.
-import React from 'react';
 
-export default () => <span>boom</span>;
+export { default } from './createLoader';

@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import Demo from './Demo';
+import './styles.css';
 
 const root = document.createElement('div');
 root.id = 'root';

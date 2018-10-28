@@ -6,11 +6,20 @@ extends:
   - airbnb
   - plugin:jest/recommended
 
+parser: babel-eslint
+
 plugins:
+  - babel
   - jest
 
 rules:
+  arrow-parens:
+    - error
+    - as-needed
   react/jsx-filename-extension: off
+  react/destructuring-assignment:
+    - error
+    - never
   import/no-extraneous-dependencies:
     - error
     - devDependencies:
