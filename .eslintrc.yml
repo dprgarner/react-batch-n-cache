@@ -1,0 +1,16 @@
+env:
+  browser: true
+
+extends: airbnb
+
+rules:
+  react/jsx-filename-extension: 0
+  import/no-extraneous-dependencies:
+    - error
+    - devDependencies:
+        - ./demo/**/*.js
+        - webpack.config.js
+
+settings:
+  import/resolver:
+    babel-module:

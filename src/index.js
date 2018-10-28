@@ -1,5 +1,4 @@
 // The library entry point.
+import React from 'react';
 
-console.log('bello');
-
-export default () => 'boom';
+export default () => <span>boom</span>;
