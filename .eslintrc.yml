@@ -5,6 +5,7 @@ env:
 extends:
   - airbnb
   - plugin:jest/recommended
+  - prettier
 
 parser: babel-eslint
 
@@ -24,6 +25,7 @@ rules:
     - error
     - devDependencies:
         - ./demo/**/*.js
+        - ./tests/**/*.js
         - webpack.config.js
 
 settings:

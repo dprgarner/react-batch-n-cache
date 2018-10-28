@@ -24,19 +24,37 @@ DemoCard.propTypes = {
   values: PropTypes.array.isRequired,
 };
 
-const Demo = () => (
-  <div>
-    <p>This is the demo page for trying out Batch 'n Cache.</p>
-    <BnCProvider
-      fetch={ids => {
-        console.log('fetching', ids);
-        return wait(500).then(() => _.fromPairs(ids.map(id => [id, true])));
-      }}
-    >
-      <DemoCard values={[1, 2, 3]} />
-      <DemoCard values={[3, 4, 5]} />
-    </BnCProvider>
-  </div>
-);
+class Demo extends React.Component {
+  state = { calls: [] };
+
+  render() {
+    return (
+      <div>
+        <p>This is the demo page for trying out Batch 'n Cache.</p>
+        <BnCProvider
+          fetch={ids => {
+            this.setState(s => ({ calls: [...s.calls, ids] }));
+            console.log('fetching', ids);
+            return wait(500).then(() =>
+              _.fromPairs(ids.map(id => [id, 'done'])),
+            );
+          }}
+        >
+          <DemoCard values={[1, 2, 3]} />
+          <DemoCard values={[3, 4, 5]} />
+          <div>
+            Calls:
+            <ul>
+              {this.state.calls.map((c, i) => (
+                // eslint-disable-next-line react/no-array-index-key
+                <li key={i}>{JSON.stringify(c)}</li>
+              ))}
+            </ul>
+          </div>
+        </BnCProvider>
+      </div>
+    );
+  }
+}
 
 export default Demo;
