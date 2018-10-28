@@ -1,3 +1,4 @@
+const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 
@@ -10,7 +11,7 @@ module.exports = {
   devtool: 'inline-source-map',
 
   devServer: {
-    contentBase: './dist',
+    contentBase: path.join(__dirname, 'demo'),
     noInfo: true,
     hot: true,
     port: 3000,
