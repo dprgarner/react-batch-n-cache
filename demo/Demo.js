@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 
 import createLoader from 'src';
 
-const wait = ms => new Promise(res => setTimeout(res, ms));
+const delay = ms => new Promise(res => setTimeout(res, ms));
 
 const { BnCConsumer, BnCProvider } = createLoader();
 
@@ -35,7 +35,7 @@ class Demo extends React.Component {
           fetch={ids => {
             this.setState(s => ({ calls: [...s.calls, ids] }));
             console.log('fetching', ids);
-            return wait(500).then(() =>
+            return delay(500).then(() =>
               _.fromPairs(ids.map(id => [id, 'done'])),
             );
           }}

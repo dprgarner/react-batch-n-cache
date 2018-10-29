@@ -2,11 +2,23 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
+/*
+  ctx: {
+    a: {
+      loading: false,
+      loaded: true,
+      data: {what: 'ever'},
+      error: undefined,
+    }
+  }
+*/
+
 export default function wrapConsumer(Consumer) {
   class ConsumerWithCtx extends React.Component {
     static propTypes = {
       ctx: PropTypes.shape({
         data: PropTypes.object.isRequired,
+        loading: PropTypes.objectOf(PropTypes.bool).isRequired,
         fetch: PropTypes.func.isRequired,
       }).isRequired,
       children: PropTypes.func.isRequired,
@@ -23,6 +35,7 @@ export default function wrapConsumer(Consumer) {
     render() {
       return this.props.children({
         data: _.pick(this.props.ctx.data, this.props.values),
+        loading: _.some(this.props.values, v => this.props.ctx.loading[v]),
       });
     }
   }

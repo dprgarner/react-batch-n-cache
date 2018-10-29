@@ -11,6 +11,7 @@ export default function wrapProvider(Provider) {
 
     state = {
       data: {},
+      loading: {},
     };
 
     queue = [];
@@ -27,12 +28,26 @@ export default function wrapProvider(Provider) {
       this.queue = _.uniq(this.queue.concat(ids));
     };
 
+    getCtx = () => ({ ...this.state, fetch: this.fetch });
+
     handleQueue() {
       if (this.queue.length) {
+        const batch = this.queue;
+        this.setState(state => ({
+          ...state,
+          loading: {
+            ...state.loading,
+            ..._.fromPairs(batch.map(id => [id, true])),
+          },
+        }));
         this.props.fetch(this.queue).then(data => {
           this.setState(state => ({
             ...state,
             data: { ...state.data, ...data },
+            loading: {
+              ...state.loading,
+              ..._.fromPairs(batch.map(id => [id, false])),
+            },
           }));
         });
       }
@@ -40,11 +55,7 @@ export default function wrapProvider(Provider) {
     }
 
     render() {
-      return (
-        <Provider value={{ data: this.state.data, fetch: this.fetch }}>
-          {this.props.children}
-        </Provider>
-      );
+      return <Provider value={this.getCtx()}>{this.props.children}</Provider>;
     }
   }
 
