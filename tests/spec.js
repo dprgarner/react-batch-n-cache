@@ -9,14 +9,12 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 
 afterEach(cleanup);
 
-test('it fetches and re-renders', async () => {
-  const { BnCConsumer, BnCProvider } = createLoader();
+it('fetches and re-renders', async () => {
+  const { BnC, BnCProvider } = createLoader();
   const fetch = jest.fn(ids => Promise.resolve(toObj(ids)));
   const { getByText } = render(
     <BnCProvider fetch={fetch}>
-      <BnCConsumer values={[1, 2, 3]}>
-        {({ data }) => Object.keys(data)}
-      </BnCConsumer>
+      <BnC values={[1, 2, 3]}>{({ data }) => Object.keys(data)}</BnC>
     </BnCProvider>,
   );
   await waitForElement(() => [getByText(/1/), getByText(/2/), getByText(/3/)], {
@@ -26,17 +24,13 @@ test('it fetches and re-renders', async () => {
   expect(fetch).toHaveBeenCalledWith([1, 2, 3]);
 });
 
-test('it batches fetches', async () => {
-  const { BnCConsumer, BnCProvider } = createLoader();
+it('batches fetches', async () => {
+  const { BnC, BnCProvider } = createLoader();
   const fetch = jest.fn(ids => Promise.resolve(toObj(ids)));
   const { getByText } = render(
     <BnCProvider fetch={fetch}>
-      <BnCConsumer values={[1, 2]}>
-        {({ data }) => Object.keys(data)}
-      </BnCConsumer>
-      <BnCConsumer values={[3, 4]}>
-        {({ data }) => Object.keys(data)}
-      </BnCConsumer>
+      <BnC values={[1, 2]}>{({ data }) => Object.keys(data)}</BnC>
+      <BnC values={[3, 4]}>{({ data }) => Object.keys(data)}</BnC>
     </BnCProvider>,
   );
   await waitForElement(() => [getByText(/1/), getByText(/4/)], {
@@ -46,17 +40,13 @@ test('it batches fetches', async () => {
   expect(fetch).toHaveBeenCalledWith([1, 2, 3, 4]);
 });
 
-test('it only requests each key once', async () => {
-  const { BnCConsumer, BnCProvider } = createLoader();
+it('only requests each key once', async () => {
+  const { BnC, BnCProvider } = createLoader();
   const fetch = jest.fn(ids => Promise.resolve(toObj(ids)));
   const { getByText } = render(
     <BnCProvider fetch={fetch}>
-      <BnCConsumer values={[1, 2]}>
-        {({ data }) => Object.keys(data)}
-      </BnCConsumer>
-      <BnCConsumer values={[2, 3]}>
-        {({ data }) => Object.keys(data)}
-      </BnCConsumer>
+      <BnC values={[1, 2]}>{({ data }) => Object.keys(data)}</BnC>
+      <BnC values={[2, 3]}>{({ data }) => Object.keys(data)}</BnC>
     </BnCProvider>,
   );
   await waitForElement(() => [getByText(/1/), getByText(/2/), getByText(/3/)], {
@@ -66,27 +56,27 @@ test('it only requests each key once', async () => {
   expect(fetch).toHaveBeenCalledWith([1, 2, 3]);
 });
 
-test('it sets loading to true if data not fetched', async () => {
-  const { BnCConsumer, BnCProvider } = createLoader();
+it('sets loading to true if data not fetched', async () => {
+  const { BnC, BnCProvider } = createLoader();
   const fetch = jest.fn(ids => delay(100).then(() => toObj(ids)));
   const { container } = render(
     <BnCProvider fetch={fetch}>
-      <BnCConsumer values={[1, 2, 3]}>
+      <BnC values={[1, 2, 3]}>
         {({ loading }) => <span>{loading && 'loading'}</span>}
-      </BnCConsumer>
+      </BnC>
     </BnCProvider>,
   );
   expect(container).toHaveTextContent('loading');
 });
 
-test('it sets loading to false after data is fetched', async () => {
-  const { BnCConsumer, BnCProvider } = createLoader();
+it('sets loading to false after data is fetched', async () => {
+  const { BnC, BnCProvider } = createLoader();
   const fetch = jest.fn(ids => Promise.resolve(toObj(ids)));
   const { container } = render(
     <BnCProvider fetch={fetch}>
-      <BnCConsumer values={[1, 2, 3]}>
+      <BnC values={[1, 2, 3]}>
         {({ loading }) => <span>{loading && 'loading'}</span>}
-      </BnCConsumer>
+      </BnC>
     </BnCProvider>,
   );
   await wait(
@@ -97,15 +87,28 @@ test('it sets loading to false after data is fetched', async () => {
   );
 });
 
-test.skip('it sets loading to true on the first render', async () => {
-  // Work in progress.
-  const { BnCConsumer, BnCProvider } = createLoader();
+it('sets loading to true on the first render', () => {
+  const { BnC, BnCProvider } = createLoader();
   const fetch = jest.fn(ids => delay(100).then(() => toObj(ids)));
   const renderProp = jest.fn(() => null);
   render(
     <BnCProvider fetch={fetch}>
-      <BnCConsumer values={[1, 2, 3]}>{renderProp}</BnCConsumer>
+      <BnC values={[1, 2, 3]}>{renderProp}</BnC>
     </BnCProvider>,
   );
   expect(renderProp.mock.calls[0][0].loading).toBe(true);
+});
+
+it.skip('sets loading to false and error to true on failure', async () => {
+  const { BnC, BnCProvider } = createLoader();
+  const { getByText } = render(
+    <BnCProvider fetch={() => Promise.reject(new Error('nope'))}>
+      <BnC values={[1, 2, 3]}>
+        {({ loading, error }) => !loading && error && 'errored'}
+      </BnC>
+    </BnCProvider>,
+  );
+  await waitForElement(() => getByText(/errored/), {
+    timeout: 500,
+  });
 });

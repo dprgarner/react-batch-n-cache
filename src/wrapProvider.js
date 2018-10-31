@@ -11,7 +11,7 @@ export default function wrapProvider(Provider) {
 
     state = {
       data: {},
-      loading: {},
+      loaded: {},
     };
 
     queue = [];
@@ -33,20 +33,13 @@ export default function wrapProvider(Provider) {
     handleQueue() {
       if (this.queue.length) {
         const batch = this.queue;
-        this.setState(state => ({
-          ...state,
-          loading: {
-            ...state.loading,
-            ..._.fromPairs(batch.map(id => [id, true])),
-          },
-        }));
         this.props.fetch(this.queue).then(data => {
           this.setState(state => ({
             ...state,
             data: { ...state.data, ...data },
-            loading: {
+            loaded: {
               ...state.loading,
-              ..._.fromPairs(batch.map(id => [id, false])),
+              ..._.fromPairs(batch.map(id => [id, true])),
             },
           }));
         });

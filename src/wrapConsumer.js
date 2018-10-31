@@ -18,7 +18,7 @@ export default function wrapConsumer(Consumer) {
     static propTypes = {
       ctx: PropTypes.shape({
         data: PropTypes.object.isRequired,
-        loading: PropTypes.objectOf(PropTypes.bool).isRequired,
+        loaded: PropTypes.objectOf(PropTypes.bool).isRequired,
         fetch: PropTypes.func.isRequired,
       }).isRequired,
       children: PropTypes.func.isRequired,
@@ -35,7 +35,7 @@ export default function wrapConsumer(Consumer) {
     render() {
       return this.props.children({
         data: _.pick(this.props.ctx.data, this.props.values),
-        loading: _.some(this.props.values, v => this.props.ctx.loading[v]),
+        loading: _.some(this.props.values, v => !this.props.ctx.loaded[v]),
       });
     }
   }
