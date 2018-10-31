@@ -2,24 +2,18 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
-/*
-  ctx: {
-    a: {
-      loading: false,
-      loaded: true,
-      data: {what: 'ever'},
-      error: undefined,
-    }
-  }
-*/
-
 export default function wrapConsumer(Consumer) {
   class ConsumerWithCtx extends React.Component {
     static propTypes = {
       ctx: PropTypes.shape({
-        data: PropTypes.object.isRequired,
-        loaded: PropTypes.objectOf(PropTypes.bool).isRequired,
         fetch: PropTypes.func.isRequired,
+        state: PropTypes.objectOf(
+          PropTypes.shape({
+            data: PropTypes.any,
+            loaded: PropTypes.boolean,
+            error: PropTypes.object,
+          }),
+        ).isRequired,
       }).isRequired,
       children: PropTypes.func.isRequired,
       // eslint-disable-next-line react/forbid-prop-types
@@ -32,10 +26,42 @@ export default function wrapConsumer(Consumer) {
       this.props.ctx.fetch(this.props.values);
     }
 
+    componentDidUpdate(prevProps) {
+      if (!_.isEqual(prevProps.values, this.props.values)) {
+        this.props.ctx.fetch(this.props.values);
+      }
+    }
+
+    shouldComponentUpdate(prevProps) {
+      if (
+        !_.isEqual(prevProps.values, this.props.values) ||
+        prevProps.children !== this.props.children
+      ) {
+        return true;
+      }
+      return _.some(
+        prevProps.values,
+        id => this.props.ctx.state[id] !== prevProps.ctx.state[id],
+      );
+    }
+
     render() {
+      const data = _.fromPairs(
+        this.props.values.map(id => [id, this.props.ctx.state[id]]),
+      );
+      const loading = _.some(
+        this.props.values,
+        id => !(this.props.ctx.state[id] || {}).loaded,
+      );
+      const { error } =
+        this.props.ctx.state[
+          _.find(this.props.values, id => this.props.ctx.state[id])
+        ] || {};
+
       return this.props.children({
-        data: _.pick(this.props.ctx.data, this.props.values),
-        loading: _.some(this.props.values, v => !this.props.ctx.loaded[v]),
+        data,
+        loading,
+        error,
       });
     }
   }

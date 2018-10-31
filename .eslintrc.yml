@@ -17,10 +17,11 @@ rules:
   arrow-parens:
     - error
     - as-needed
-  react/jsx-filename-extension: off
   react/destructuring-assignment:
     - error
     - never
+  react/jsx-filename-extension: off
+  react/sort-comp: off
   import/no-extraneous-dependencies:
     - error
     - devDependencies:

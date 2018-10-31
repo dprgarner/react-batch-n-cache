@@ -7,48 +7,95 @@ export default function wrapProvider(Provider) {
     static propTypes = {
       children: PropTypes.node.isRequired,
       fetch: PropTypes.func.isRequired,
+      throttle: PropTypes.number,
     };
 
-    state = {
-      data: {},
-      loaded: {},
+    static defaultProps = {
+      throttle: 0,
     };
+
+    state = {};
 
     queue = [];
+
+    unmounting = false;
 
     componentDidMount() {
       this.handleQueue();
     }
 
-    componentDidUpdate() {
+    componentDidUpdate(prevProps) {
+      if (prevProps.throttle !== this.props.throttle) {
+        this.handleQueue.cancel();
+        this.handleQueue = _.throttle(this.handleQueueCb, this.props.throttle, {
+          leading: false,
+        });
+      }
       this.handleQueue();
+    }
+
+    componentWillUnmount() {
+      this.unmounting = true;
     }
 
     fetch = ids => {
       this.queue = _.uniq(this.queue.concat(ids));
+      this.handleQueue();
     };
 
-    getCtx = () => ({ ...this.state, fetch: this.fetch });
-
-    handleQueue() {
+    handleQueueCb = () => {
       if (this.queue.length) {
-        const batch = this.queue;
-        this.props.fetch(this.queue).then(data => {
-          this.setState(state => ({
-            ...state,
-            data: { ...state.data, ...data },
-            loaded: {
-              ...state.loading,
-              ..._.fromPairs(batch.map(id => [id, true])),
-            },
-          }));
-        });
+        this.processBatch(this.queue);
       }
       this.queue = [];
-    }
+    };
+
+    handleQueue = _.throttle(this.handleQueueCb, this.props.throttle, {
+      leading: false,
+    });
+
+    processBatch = async batch => {
+      try {
+        const data = await this.props.fetch(batch);
+        if (this.unmounting) return;
+        this.setState(state => ({
+          ...state,
+          ..._.fromPairs(
+            batch.map(id => [
+              id,
+              {
+                ...batch[id],
+                data: data[id],
+                error: null,
+                loaded: true,
+              },
+            ]),
+          ),
+        }));
+      } catch (err) {
+        if (this.unmounting) return;
+        this.setState(state => ({
+          ...state,
+          ..._.fromPairs(
+            batch.map(id => [
+              id,
+              {
+                ...batch[id],
+                error: err,
+                loaded: true,
+              },
+            ]),
+          ),
+        }));
+      }
+    };
 
     render() {
-      return <Provider value={this.getCtx()}>{this.props.children}</Provider>;
+      return (
+        <Provider value={{ state: this.state, fetch: this.fetch }}>
+          {this.props.children}
+        </Provider>
+      );
     }
   }
 
