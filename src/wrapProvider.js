@@ -27,9 +27,13 @@ export default function wrapProvider(Provider) {
     componentDidUpdate(prevProps) {
       if (prevProps.throttle !== this.props.throttle) {
         this.handleQueue.cancel();
-        this.handleQueue = _.throttle(this.handleQueueCb, this.props.throttle, {
-          leading: false,
-        });
+        this.handleQueue = _.throttle(
+          this.handleQueueInner,
+          this.props.throttle,
+          {
+            leading: false,
+          },
+        );
       }
       this.handleQueue();
     }
@@ -39,18 +43,22 @@ export default function wrapProvider(Provider) {
     }
 
     fetch = ids => {
-      this.queue = _.uniq(this.queue.concat(ids));
+      this.queue = _.uniq(
+        this.queue.concat(
+          ids.filter(id => !this.state[id] || this.state[id].error),
+        ),
+      );
       this.handleQueue();
     };
 
-    handleQueueCb = () => {
+    handleQueueInner = () => {
       if (this.queue.length) {
         this.processBatch(this.queue);
       }
       this.queue = [];
     };
 
-    handleQueue = _.throttle(this.handleQueueCb, this.props.throttle, {
+    handleQueue = _.throttle(this.handleQueueInner, this.props.throttle, {
       leading: false,
     });
 

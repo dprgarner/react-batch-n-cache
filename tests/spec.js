@@ -279,3 +279,64 @@ it('updates the throttle debounce time', async () => {
   await delay(100);
   expect(fetch).toHaveBeenCalledTimes(1);
 });
+
+it('caches values', async () => {
+  const { BnC, BnCProvider } = createLoader();
+  const fetch = jest.fn(ids => Promise.resolve(toObj(ids)));
+  const { getByText } = render(
+    <BnCProvider fetch={fetch}>
+      <BnC values={[1]}>{({ loading }) => !loading && '#1'}</BnC>
+      <Toggle>
+        {on =>
+          on && <BnC values={[1]}>{({ loading }) => !loading && '#2'}</BnC>
+        }
+      </Toggle>
+    </BnCProvider>,
+  );
+  await waitForElement(() => getByText(/#1/), {
+    timeout: 500,
+  });
+  expect(fetch).toHaveBeenCalledTimes(1);
+
+  fireEvent.click(getByText('Show'));
+  await waitForElement(() => getByText(/#2/), {
+    timeout: 500,
+  });
+
+  // Wait for throttled function to flush
+  await delay(10);
+  expect(fetch).toHaveBeenCalledTimes(1);
+});
+
+it('does not cache errors', async () => {
+  const { BnC, BnCProvider } = createLoader();
+  const fetch = jest.fn();
+  fetch
+    .mockReturnValueOnce(Promise.reject(new Error(':(')))
+    .mockReturnValueOnce(Promise.resolve({ 1: 'ok' }));
+  const { getByText } = render(
+    <BnCProvider fetch={fetch}>
+      <BnC values={[1]}>{({ loading }) => !loading && '#1'}</BnC>
+      <Toggle>
+        {on =>
+          on && <BnC values={[1]}>{({ loading }) => !loading && '#2'}</BnC>
+        }
+      </Toggle>
+    </BnCProvider>,
+  );
+  await waitForElement(() => getByText(/#1/), {
+    timeout: 500,
+  });
+  expect(fetch).toHaveBeenCalledTimes(1);
+
+  fireEvent.click(getByText('Show'));
+  await waitForElement(() => getByText(/#2/), {
+    timeout: 500,
+  });
+
+  // Wait for throttled function to flush
+  await delay(10);
+  expect(fetch).toHaveBeenCalledTimes(2);
+});
+
+// TODO: retry! invalidate! readme! ...update?

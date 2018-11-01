@@ -1,6 +1,6 @@
 # React Batch 'n Cache.
 
-A library component for batching and catching asynchronous requests. Directly inspired by Dataloader and Apollo GraphQL.
+A library component for batching and catching asynchronous GET requests. Inspired by Dataloader and Apollo GraphQL.
 
 ```jsx
 import createLoader from 'react-batch-n-cache';
@@ -10,7 +10,7 @@ const { BnCProvider, BnCConsumer } = createLoader();
 // Using the Provider
 const App = () => (
   <BnCProvider
-    debounce={10}
+    throttle={10}
     fetch={ids => fetchFromAPI(ids).then(res => res.data)}
   >
     <Main />
