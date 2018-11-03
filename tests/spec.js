@@ -9,12 +9,15 @@ import {
   waitForElement,
 } from 'react-testing-library';
 
-import BnCStatus from 'src/constants';
 import createLoader from 'src';
+import BnCStatus from 'src/constants';
+// import { delay } from 'src/utils';
+import * as utils from 'src/utils';
+const { delay } = utils;
 
 const toObj = ids => _.fromPairs(ids.map(id => [id, true]));
-const delay = ms => new Promise(res => setTimeout(res, ms));
 
+const globalConsoleError = console.error;
 beforeEach(() => {
   console.error = jest.fn();
 });
@@ -386,4 +389,62 @@ it('allows retries on error', async () => {
   await waitForElement(() => getByText(/ok/), {
     timeout: 500,
   });
+});
+
+it('automatically retries on error after an interval', async () => {
+  const { BnC, BnCProvider } = createLoader();
+  utils.delay = jest.fn(() => () => Promise.resolve());
+
+  const fetch = jest.fn();
+  fetch.mockReturnValue(Promise.reject(new Error(':(')));
+
+  const { getByText } = render(
+    <BnCProvider fetch={fetch} retry={{ delay: 'exponential', max: 3 }}>
+      <BnC values={[1]}>{({ status }) => status}</BnC>
+    </BnCProvider>,
+  );
+  await delay(100);
+  expect(fetch).toHaveBeenCalledTimes(3);
+  expect(utils.delay).toHaveBeenCalledTimes(2);
+  expect(utils.delay).toHaveBeenCalledWith(250);
+  expect(utils.delay).toHaveBeenCalledWith(500);
+});
+
+it('retries on error after a set interval', async () => {
+  const { BnC, BnCProvider } = createLoader();
+  utils.delay = jest.fn(() => () => Promise.resolve());
+
+  const fetch = jest.fn();
+  fetch.mockReturnValue(Promise.reject(new Error(':(')));
+
+  const { getByText } = render(
+    <BnCProvider fetch={fetch} retry={{ delay: 300, max: 3 }}>
+      <BnC values={[1]}>{({ status }) => status}</BnC>
+    </BnCProvider>,
+  );
+  await delay(100);
+  expect(fetch).toHaveBeenCalledTimes(3);
+  expect(utils.delay).toHaveBeenCalledTimes(2);
+  expect(utils.delay).toHaveBeenCalledWith(300);
+  expect(utils.delay).toHaveBeenCalledWith(300);
+});
+
+it.skip('retries on error after an interval by default', async () => {
+  // Something going wrong, it's triggering delay constantly.
+  const { BnC, BnCProvider } = createLoader();
+  const delay2 = ms => new Promise(res => setTimeout(res, ms));
+
+  utils.delay = jest.fn(() => d => delay2(d));
+  const fetch = jest.fn();
+  fetch.mockReturnValue(Promise.reject(new Error(':(')));
+
+  const { getByText } = render(
+    <BnCProvider fetch={fetch} retry={{ delay: 500 }}>
+      <BnC values={[1]}>{({ status }) => status}</BnC>
+    </BnCProvider>,
+  );
+  await delay(100);
+  expect(fetch).toHaveBeenCalledTimes(3);
+  expect(utils.delay).toHaveBeenCalledTimes(2);
+  expect(utils.delay).toHaveBeenCalledWith(50);
 });
