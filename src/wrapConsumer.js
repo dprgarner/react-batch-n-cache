@@ -2,6 +2,8 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import BnCStatus from './constants';
+
 export default function wrapConsumer(Consumer) {
   class ConsumerWithCtx extends React.Component {
     static propTypes = {
@@ -45,23 +47,41 @@ export default function wrapConsumer(Consumer) {
       );
     }
 
+    retry = () => {
+      this.props.ctx.fetch(this.props.values);
+    };
+
     render() {
-      const data = _.fromPairs(
-        this.props.values.map(id => [id, this.props.ctx.state[id]]),
-      );
-      const loading = _.some(
-        this.props.values,
-        id => !(this.props.ctx.state[id] || {}).loaded,
-      );
-      const { error } =
-        this.props.ctx.state[
-          _.find(this.props.values, id => this.props.ctx.state[id])
-        ] || {};
+      let data = {};
+      let status;
+      if (
+        _.some(
+          this.props.values,
+          id => !(this.props.ctx.state[id] || {}).loaded,
+        )
+      ) {
+        status = BnCStatus.LOADING;
+      } else if (
+        _.some(
+          this.props.values,
+          id => (this.props.ctx.state[id] || {}).errored,
+        )
+      ) {
+        status = BnCStatus.ERROR;
+      } else {
+        status = BnCStatus.COMPLETE;
+        data = _.fromPairs(
+          this.props.values.map(id => [
+            id,
+            (this.props.ctx.state[id] || {}).data,
+          ]),
+        );
+      }
 
       return this.props.children({
         data,
-        loading,
-        error,
+        status,
+        retry: this.retry,
       });
     }
   }

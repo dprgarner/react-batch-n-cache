@@ -9,10 +9,15 @@ import {
   waitForElement,
 } from 'react-testing-library';
 
+import BnCStatus from 'src/constants';
 import createLoader from 'src';
 
 const toObj = ids => _.fromPairs(ids.map(id => [id, true]));
 const delay = ms => new Promise(res => setTimeout(res, ms));
+
+beforeEach(() => {
+  console.error = jest.fn();
+});
 
 afterEach(cleanup);
 
@@ -88,12 +93,10 @@ it('sets loading to true if data not fetched', async () => {
   const fetch = jest.fn(ids => delay(100).then(() => toObj(ids)));
   const { container } = render(
     <BnCProvider fetch={fetch}>
-      <BnC values={[1, 2, 3]}>
-        {({ loading }) => <span>{loading && 'loading'}</span>}
-      </BnC>
+      <BnC values={[1, 2, 3]}>{({ status }) => <span>{status}</span>}</BnC>
     </BnCProvider>,
   );
-  expect(container).toHaveTextContent('loading');
+  expect(container).toHaveTextContent(BnCStatus.LOADING);
 });
 
 it('sets loading to false after data is fetched', async () => {
@@ -101,14 +104,12 @@ it('sets loading to false after data is fetched', async () => {
   const fetch = jest.fn(ids => Promise.resolve(toObj(ids)));
   const { container } = render(
     <BnCProvider fetch={fetch}>
-      <BnC values={[1, 2, 3]}>
-        {({ loading }) => <span>{loading && 'loading'}</span>}
-      </BnC>
+      <BnC values={[1, 2, 3]}>{({ status }) => <span>{status}</span>}</BnC>
     </BnCProvider>,
   );
   await wait(
     () => {
-      expect(container).not.toHaveTextContent('loading');
+      expect(container).not.toHaveTextContent(BnCStatus.LOADING);
     },
     { timeout: 100 },
   );
@@ -123,32 +124,28 @@ it('sets loading to true on the first render', () => {
       <BnC values={[1, 2, 3]}>{renderProp}</BnC>
     </BnCProvider>,
   );
-  expect(renderProp.mock.calls[0][0].loading).toBe(true);
+  expect(renderProp.mock.calls[0][0].status).toBe(BnCStatus.LOADING);
 });
 
 it('sets loading to false and error to true on failure', async () => {
   const { BnC, BnCProvider } = createLoader();
-  const renderProp = jest.fn(
-    ({ loading, error }) => !loading && error && 'errored',
-  );
+  const renderProp = jest.fn(({ status }) => status);
   const e = new Error('nope');
   const { getByText } = render(
     <BnCProvider fetch={() => Promise.reject(e)}>
       <BnC values={[1, 2, 3]}>{renderProp}</BnC>
     </BnCProvider>,
   );
-  await waitForElement(() => getByText(/errored/), {
+  await waitForElement(() => getByText(BnCStatus.ERROR), {
     timeout: 500,
   });
-  expect(renderProp.mock.calls[1][0].loading).toBe(false);
-  expect(renderProp.mock.calls[1][0].error).toBe(e);
+  expect(console.error).toHaveBeenCalledTimes(1);
+  expect(console.error).toHaveBeenCalledWith(e);
 });
 
 it('catches synchronous errors', async () => {
   const { BnC, BnCProvider } = createLoader();
-  const renderProp = jest.fn(
-    ({ loading, error }) => !loading && error && 'errored',
-  );
+  const renderProp = jest.fn(({ status }) => status);
   const e = new Error('nope');
   const { getByText } = render(
     <BnCProvider
@@ -159,11 +156,11 @@ it('catches synchronous errors', async () => {
       <BnC values={[1, 2, 3]}>{renderProp}</BnC>
     </BnCProvider>,
   );
-  await waitForElement(() => getByText(/errored/), {
+  await waitForElement(() => getByText(BnCStatus.ERROR), {
     timeout: 500,
   });
-  expect(renderProp.mock.calls[1][0].loading).toBe(false);
-  expect(renderProp.mock.calls[1][0].error).toBe(e);
+  expect(console.error).toHaveBeenCalledTimes(1);
+  expect(console.error).toHaveBeenCalledWith(e);
 });
 
 it('retains loading state for previously-mounted cpts', async () => {
@@ -172,13 +169,17 @@ it('retains loading state for previously-mounted cpts', async () => {
   const { getByText, container } = render(
     <BnCProvider fetch={fetch}>
       <BnC values={[1]}>
-        {({ data, loading }) => !loading && Object.keys(data)}
+        {({ data, status }) =>
+          status === BnCStatus.COMPLETE && Object.keys(data)
+        }
       </BnC>
       <Toggle>
         {on =>
           on && (
             <BnC values={[2]}>
-              {({ data, loading }) => !loading && Object.keys(data)}
+              {({ data, status }) =>
+                status === BnCStatus.COMPLETE && Object.keys(data)
+              }
             </BnC>
           )
         }
@@ -285,10 +286,16 @@ it('caches values', async () => {
   const fetch = jest.fn(ids => Promise.resolve(toObj(ids)));
   const { getByText } = render(
     <BnCProvider fetch={fetch}>
-      <BnC values={[1]}>{({ loading }) => !loading && '#1'}</BnC>
+      <BnC values={[1]}>
+        {({ status }) => status === BnCStatus.COMPLETE && '#1'}
+      </BnC>
       <Toggle>
         {on =>
-          on && <BnC values={[1]}>{({ loading }) => !loading && '#2'}</BnC>
+          on && (
+            <BnC values={[1]}>
+              {({ status }) => status === BnCStatus.COMPLETE && '#2'}
+            </BnC>
+          )
         }
       </Toggle>
     </BnCProvider>,
@@ -311,15 +318,20 @@ it('caches values', async () => {
 it('does not cache errors', async () => {
   const { BnC, BnCProvider } = createLoader();
   const fetch = jest.fn();
-  fetch
-    .mockReturnValueOnce(Promise.reject(new Error(':(')))
-    .mockReturnValueOnce(Promise.resolve({ 1: 'ok' }));
+  fetch.mockReturnValue(Promise.reject(new Error(':(')));
+
   const { getByText } = render(
     <BnCProvider fetch={fetch}>
-      <BnC values={[1]}>{({ loading }) => !loading && '#1'}</BnC>
+      <BnC values={[1]}>
+        {({ status }) => status === BnCStatus.ERROR && '#1'}
+      </BnC>
       <Toggle>
         {on =>
-          on && <BnC values={[1]}>{({ loading }) => !loading && '#2'}</BnC>
+          on && (
+            <BnC values={[1, 2]}>
+              {({ status }) => status === BnCStatus.ERROR && '#2'}
+            </BnC>
+          )
         }
       </Toggle>
     </BnCProvider>,
@@ -328,15 +340,50 @@ it('does not cache errors', async () => {
     timeout: 500,
   });
   expect(fetch).toHaveBeenCalledTimes(1);
+  expect(fetch).toHaveBeenCalledWith([1]);
 
   fireEvent.click(getByText('Show'));
   await waitForElement(() => getByText(/#2/), {
     timeout: 500,
   });
-
   // Wait for throttled function to flush
   await delay(10);
   expect(fetch).toHaveBeenCalledTimes(2);
+  expect(fetch).toHaveBeenCalledWith([1, 2]);
 });
 
-// TODO: retry! invalidate! readme! ...update?
+it('allows retries on error', async () => {
+  const { BnC, BnCProvider } = createLoader();
+  const fetch = jest.fn();
+  fetch
+    .mockReturnValueOnce(Promise.reject(new Error(':(')))
+    .mockReturnValueOnce(Promise.resolve({ 1: 'ok' }));
+  const { getByText } = render(
+    <BnCProvider fetch={fetch}>
+      <BnC values={[1]}>
+        {({ status, data, retry }) =>
+          status === BnCStatus.ERROR ? (
+            <button type="button" onClick={() => retry()}>
+              retry
+            </button>
+          ) : status === BnCStatus.LOADING ? (
+            'loading'
+          ) : (
+            data[1]
+          )
+        }
+      </BnC>
+    </BnCProvider>,
+  );
+  await waitForElement(() => getByText(/retry/), {
+    timeout: 500,
+  });
+  expect(fetch).toHaveBeenCalledTimes(1);
+  fireEvent.click(getByText('retry'));
+
+  await delay(10);
+  expect(fetch).toHaveBeenCalledTimes(2);
+  await waitForElement(() => getByText(/ok/), {
+    timeout: 500,
+  });
+});

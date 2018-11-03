@@ -45,7 +45,7 @@ export default function wrapProvider(Provider) {
     fetch = ids => {
       this.queue = _.uniq(
         this.queue.concat(
-          ids.filter(id => !this.state[id] || this.state[id].error),
+          ids.filter(id => !this.state[id] || this.state[id].errored),
         ),
       );
       this.handleQueue();
@@ -66,35 +66,34 @@ export default function wrapProvider(Provider) {
       try {
         const data = await this.props.fetch(batch);
         if (this.unmounting) return;
-        this.setState(state => ({
-          ...state,
-          ..._.fromPairs(
+        this.setState(state =>
+          _.fromPairs(
             batch.map(id => [
               id,
               {
                 ...batch[id],
                 data: data[id],
-                error: null,
+                errored: false,
                 loaded: true,
               },
             ]),
           ),
-        }));
+        );
       } catch (err) {
+        console.error(err);
         if (this.unmounting) return;
-        this.setState(state => ({
-          ...state,
-          ..._.fromPairs(
+        this.setState(state =>
+          _.fromPairs(
             batch.map(id => [
               id,
               {
                 ...batch[id],
-                error: err,
+                errored: true,
                 loaded: true,
               },
             ]),
           ),
-        }));
+        );
       }
     };
 

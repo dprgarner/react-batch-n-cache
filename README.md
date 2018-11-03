@@ -3,9 +3,9 @@
 A library component for batching and catching asynchronous GET requests. Inspired by Dataloader and Apollo GraphQL.
 
 ```jsx
-import createLoader from 'react-batch-n-cache';
+import { createLoader, BnCStatus } from 'react-batch-n-cache';
 
-const { BnCProvider, BnCConsumer } = createLoader();
+const { BnCProvider, BnC } = createLoader();
 
 // Using the Provider
 const App = () => (
@@ -20,19 +20,18 @@ const App = () => (
 // Using the Consumer
 const Main = () => (
   <BnCConsumer values={['a', 'b', 'c']}>
-    {({ loading, error, data, retry }) => {
-      if (error) {
+    {({ status, data, retry }) => {
+      if (status === BnCStatus.LOADING) {
+        return <span>Loading...</span>;
+      }
+      if (status === BnCStatus.ERROR) {
         return (
           <div className="error">
-            {error.message}
+            Something went wrong.
             <button onClick={() => retry()}>Retry</button>
           </div>
         );
       }
-      if (loading) {
-        return <span>Loading...</span>;
-      }
-
       return (
         <ul>
           <li>{data.a}</li>
@@ -47,6 +46,4 @@ const Main = () => (
 ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
-- Does not fetch an ID more than once
-- What do we do about errors and failures to retrieve?
-  https://github.com/facebook/dataloader/blob/master/src/index.js
+https://github.com/facebook/dataloader/blob/master/src/index.js
