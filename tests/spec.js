@@ -434,21 +434,24 @@ it('retries on error after a set interval', async () => {
 });
 
 it('retries on error after an interval by default', async () => {
-  // This is the flakiest test ever written Delete me and use RxJS for
-  // everything.
   const { BnC, BnCProvider } = createLoader();
 
   jest.spyOn(utils, 'delay');
   const fetch = jest.fn();
-  fetch.mockReturnValue(Promise.reject(new Error(':(')));
+  fetch
+    .mockImplementationOnce(() => Promise.reject(new Error(':(')))
+    .mockImplementationOnce(() => Promise.reject(new Error(':(')))
+    .mockImplementationOnce(() => Promise.reject(new Error(':(')))
+    .mockImplementationOnce(() => Promise.reject(new Error(':(')))
+    .mockImplementationOnce(() => Promise.resolve({ 1: 'ok' }));
 
   render(
-    <BnCProvider fetch={fetch} retry={{ delay: 100 }}>
+    <BnCProvider fetch={fetch} retry={{ delay: 10 }}>
       <BnC values={[1]}>{({ status }) => status}</BnC>
     </BnCProvider>,
   );
   await delay(300);
-  expect(fetch).toHaveBeenCalledTimes(3);
-  expect(utils.delay).toHaveBeenCalledTimes(3);
-  expect(utils.delay).toHaveBeenCalledWith(100);
+  expect(fetch).toHaveBeenCalledTimes(5);
+  expect(utils.delay).toHaveBeenCalledTimes(4);
+  expect(utils.delay.mock.calls).toEqual([[10], [10], [10], [10]]);
 });
