@@ -20,7 +20,7 @@ export default function wrapProvider(Provider) {
       throttle: 0,
       retry: {
         delay: 'exponential',
-        max: Infinity,
+        max: 25,
       },
     };
 
@@ -62,7 +62,7 @@ export default function wrapProvider(Provider) {
     };
 
     handleQueueInner = () => {
-      const queue = this.queue;
+      const { queue } = this;
       this.queue = [];
       if (queue.length) {
         this.processBatch(queue);
@@ -83,7 +83,6 @@ export default function wrapProvider(Provider) {
         0,
       );
       if (attempts < retry.max) {
-        console.log('retrying');
         const waitTime =
           retry.delay === 'exponential'
             ? 250 * 2 ** (attempts - 1)
@@ -98,7 +97,7 @@ export default function wrapProvider(Provider) {
       try {
         const data = await this.props.fetch(batch);
         if (this.unmounting) return;
-        this.setState(state =>
+        this.setState(() =>
           _.fromPairs(
             batch.map(id => [
               id,

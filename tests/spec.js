@@ -11,18 +11,20 @@ import {
 
 import createLoader from 'src';
 import BnCStatus from 'src/constants';
-// import { delay } from 'src/utils';
 import * as utils from 'src/utils';
+
 const { delay } = utils;
 
 const toObj = ids => _.fromPairs(ids.map(id => [id, true]));
 
-const globalConsoleError = console.error;
 beforeEach(() => {
   console.error = jest.fn();
 });
 
-afterEach(cleanup);
+afterEach((...args) => {
+  utils.delay = delay;
+  return cleanup(...args);
+});
 
 /**
  * Utility component for testing subsequent mounts.
@@ -364,17 +366,19 @@ it('allows retries on error', async () => {
   const { getByText } = render(
     <BnCProvider fetch={fetch}>
       <BnC values={[1]}>
-        {({ status, data, retry }) =>
-          status === BnCStatus.ERROR ? (
-            <button type="button" onClick={() => retry()}>
-              retry
-            </button>
-          ) : status === BnCStatus.LOADING ? (
-            'loading'
-          ) : (
-            data[1]
-          )
-        }
+        {({ status, data, retry }) => {
+          if (status === BnCStatus.ERROR) {
+            return (
+              <button type="button" onClick={() => retry()}>
+                retry
+              </button>
+            );
+          }
+          if (status === BnCStatus.LOADING) {
+            return 'loading';
+          }
+          return data[1];
+        }}
       </BnC>
     </BnCProvider>,
   );
@@ -398,7 +402,7 @@ it('automatically retries on error after an interval', async () => {
   const fetch = jest.fn();
   fetch.mockReturnValue(Promise.reject(new Error(':(')));
 
-  const { getByText } = render(
+  render(
     <BnCProvider fetch={fetch} retry={{ delay: 'exponential', max: 3 }}>
       <BnC values={[1]}>{({ status }) => status}</BnC>
     </BnCProvider>,
@@ -417,7 +421,7 @@ it('retries on error after a set interval', async () => {
   const fetch = jest.fn();
   fetch.mockReturnValue(Promise.reject(new Error(':(')));
 
-  const { getByText } = render(
+  render(
     <BnCProvider fetch={fetch} retry={{ delay: 300, max: 3 }}>
       <BnC values={[1]}>{({ status }) => status}</BnC>
     </BnCProvider>,
@@ -429,22 +433,22 @@ it('retries on error after a set interval', async () => {
   expect(utils.delay).toHaveBeenCalledWith(300);
 });
 
-it.skip('retries on error after an interval by default', async () => {
-  // Something going wrong, it's triggering delay constantly.
+it('retries on error after an interval by default', async () => {
+  // This is the flakiest test ever written Delete me and use RxJS for
+  // everything.
   const { BnC, BnCProvider } = createLoader();
-  const delay2 = ms => new Promise(res => setTimeout(res, ms));
 
-  utils.delay = jest.fn(() => d => delay2(d));
+  jest.spyOn(utils, 'delay');
   const fetch = jest.fn();
   fetch.mockReturnValue(Promise.reject(new Error(':(')));
 
-  const { getByText } = render(
-    <BnCProvider fetch={fetch} retry={{ delay: 500 }}>
+  render(
+    <BnCProvider fetch={fetch} retry={{ delay: 100 }}>
       <BnC values={[1]}>{({ status }) => status}</BnC>
     </BnCProvider>,
   );
-  await delay(100);
+  await delay(300);
   expect(fetch).toHaveBeenCalledTimes(3);
-  expect(utils.delay).toHaveBeenCalledTimes(2);
-  expect(utils.delay).toHaveBeenCalledWith(50);
+  expect(utils.delay).toHaveBeenCalledTimes(3);
+  expect(utils.delay).toHaveBeenCalledWith(100);
 });
