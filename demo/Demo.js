@@ -2,26 +2,62 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import createLoader from 'src';
+import createLoader, { BnCStatus } from 'src';
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
-const { BnCConsumer, BnCProvider } = createLoader();
+const { BnC, BnCProvider } = createLoader();
 
 const DemoCard = props => (
-  <BnCConsumer values={props.values}>
+  <BnC values={props.values}>
     {({ data }) => (
       <div className="card">
         <span>{`Fetch: ${props.values.join(', ')}`}</span>
         <pre>{JSON.stringify(data, null, 2)}</pre>
       </div>
     )}
-  </BnCConsumer>
+  </BnC>
 );
 
 DemoCard.propTypes = {
   // eslint-disable-next-line react/forbid-prop-types
   values: PropTypes.array.isRequired,
+};
+
+const DogProvider = props => (
+  <BnCProvider
+    fetch={ids =>
+      fetch(`/dog?${ids.map(id => `breed=${id}`).join('&')}`)
+        .then(d => d.json())
+        .then(d => d.dogs)
+    }
+  >
+    {props.children}
+  </BnCProvider>
+);
+
+DogProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
+const Dog = props => (
+  <BnC values={[props.breed]}>
+    {({ status, data }) =>
+      status === BnCStatus.COMPLETE && (
+        <div
+          className="card"
+          style={{
+            backgroundSize: 'cover',
+            backgroundImage: `url(${data[props.breed]})`,
+          }}
+        />
+      )
+    }
+  </BnC>
+);
+
+Dog.propTypes = {
+  breed: PropTypes.string.isRequired,
 };
 
 class Demo extends React.Component {
@@ -52,6 +88,12 @@ class Demo extends React.Component {
             </ul>
           </div>
         </BnCProvider>
+
+        <DogProvider>
+          <Dog breed="collie/border" />
+          <Dog breed="boxer" />
+          <Dog breed="dane-great" />
+        </DogProvider>
       </div>
     );
   }

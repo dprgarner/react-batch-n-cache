@@ -112,6 +112,7 @@ export default function wrapProvider(Provider) {
           ),
         );
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error(err);
         if (this.unmounting) return;
         this.setState(

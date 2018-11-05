@@ -1,4 +1,7 @@
+const _ = require('lodash');
 const path = require('path');
+const fetch = require('node-fetch');
+
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 
@@ -12,9 +15,40 @@ module.exports = {
 
   devServer: {
     contentBase: path.join(__dirname, 'demo'),
-    noInfo: true,
     hot: true,
     port: 3000,
+    before: app => {
+      app.get('/dog', (req, res) => {
+        try {
+          let breeds = req.query.breed;
+          if (!breeds) {
+            breeds = [];
+          } else if (!_.isArray(breeds)) {
+            breeds = [breeds];
+          }
+          Promise.all(
+            breeds.map(breed =>
+              fetch(`https://dog.ceo/api/breed/${breed}/images/random`)
+                .then(r => r.json())
+                .then(d => [breed, d.message]),
+            ),
+          )
+            .then(dogResponses => {
+              const data = {
+                dogs: _.fromPairs(dogResponses),
+              };
+              console.log(data);
+              res.json(data);
+            })
+            .catch(e => {
+              console.error(e);
+              res.status(500).json({ error: e.message });
+            });
+        } catch (e) {
+          res.status(500).json({ error: e.message });
+        }
+      });
+    },
   },
 
   mode: 'development',

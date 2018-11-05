@@ -46,5 +46,3 @@ const Main = () => (
   </BnC>
 );
 ```
-
-https://github.com/facebook/dataloader/blob/master/src/index.js
