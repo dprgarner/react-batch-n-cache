@@ -3,6 +3,8 @@
 A library component for batching and catching asynchronous API queries.
 Inspired by DataLoader and Apollo Client.
 
+[![npm version](https://badge.fury.io/js/react-batch-n-cache.svg)](https://badge.fury.io/js/react-batch-n-cache)
+
 ## Motivation
 
 The aim of this library is to provide a simple-to-use state-managing component
