@@ -52,12 +52,16 @@ complex. Sometimes, it's enough to just fetch a set of data of a single type
 from a single endpoint.
 
 Another source of inspiration for this library is the [DataLoader][dataloader]
-library. This library provides an API to create _loaders_, which batch all calls
-made to them in a single tick of the JavaScript event loop, and collate them
-all into a single API request. Loaders also implement a simple memoisation cache to reduce unnecessary API calls.
-This library was designed for use on the server-side, for consolidating
-and removing repetition from GraphQL queries, reducing the load on different
-backing services. This approach can be useful for reducing HTTP
+library. This library allows you to create _loaders_, which are functions
+which collate all calls made to them within a single tick of the JavaScript
+event loop, and make a single batch call to another function. In the context
+of remote requests, these can be used to collate multiple independent calls
+into a single request. Loaders also implement a simple memoisation cache to
+reduce unnecessary remote requests. This library was designed for use on the server-
+side, for consolidating and removing repetition from GraphQL queries, reducing
+the load on different backing services.
+
+This approach can be useful for reducing HTTP
 requests made on the client-side, too. By collating distinct queries triggered when
 different data-requiring components are rendered, and removing duplicate requests when
 multiple components with the same data requirements are mounted, the number of
@@ -79,8 +83,9 @@ batch-loading function is triggered with the values requested by the consumers
 in their props. The Provider automatically de-duplicates requests, avoids
 requesting the same data multiple times, and batches requests made within a
 short time period into a single HTTP request. The consumers re-render with the
-respective data when the request is complete, or with the loading and error
-states if the network request is in progress or has failed respectively.
+respective data when the request is complete, with the loading state if the
+network request is in progress, and with the error state state if the network
+request has failed.
 
 ### Example Usage
 
@@ -93,6 +98,7 @@ const App = () => (
   <BnCProvider
     throttle={10}
     fetch={ids => fetchFromAPI(ids).then(res => res.data)}
+    retry={{ delay: 'exponential', max: 5 }}
   >
     <Main />
   </BnCProvider>
@@ -128,4 +134,65 @@ const Main = () => (
 
 ### API
 
-TODO
+#### `createLoader`
+
+A function that generates a React Batch 'n Cache Provider component class,
+`BnCProvider`, and a Consumer component class, `BnC`.
+
+```jsx
+import { createLoader } from 'react-batch-n-cache';
+const { BnCProvider, BnC } = createLoader();
+```
+
+#### `<BnCProvider>`
+
+A component that controls the remote data requesting, consolidating, and
+caching.
+
+##### Props
+
+- `fetch: Array<String> => Promise<Object>`: When at least one `BnC` component
+  is rendered below this component in the render tree, the `fetch` prop will be
+  called with an array of the IDs given as props to the Consumer components. The
+  function given to the `fetch` prop should generate a promise which resolves to
+  an object with the array entries as keys and the remotely-fetched data as the
+  corresponding values.
+- `throttle: Number?`: The time in milliseconds to wait between `BnC` components
+  being rendered in the tree before triggering a `fetch` request. Defaults to 0.
+- `retry: { delay?: <number> | 'exponential', max?: <number> }`: this prop
+  specifies how to attempt to retry the `fetch` callback if the promise is
+  rejected. The value of `retry.delay` can be a number of milliseconds to wait
+  between requests, or `'exponential'` to make the delay time double after
+  each request attempt. The request will be re-attempted up to `retry.max`
+  times. Retries can also be triggered manually in the `retry` prop of the `BnC`
+  consumer component. Defaults to `{ delay: 'exponential', max: 25 }`.
+
+#### `<BnC>`
+
+A component that declares the IDs of the remote data it requires, and uses
+this via a render prop with loading and error states.
+
+##### Props
+
+- `values: Array<String>`: An array of string values representing the IDs of the
+  data that the component needs to request from the remote data source before
+  rendering. These will be called as the argument to the `fetch` prop of the
+  `BnCProvider` above the component in the tree, along with any other `values`
+  from other `BnC` components mounted at a similar time.
+- `children: { data, status, retry } => React.Node`: A render prop for determining
+  how to render the fetched data. The render prop is called with a single
+  argument with the following keys:
+  - `data: <Object>`: an object with keys corresponding to the `values` prop items
+    for data that has been successfully fetched. The keys will be missing if the
+    data has not loaded yet or has failed to load. The data will be available
+    if it was fetched and cached by another `BnC` component mount.
+  - `status: BnCStatus.LOADING | BnCStatus.ERROR | BnCStatus.COMPLETE`: reports
+    the status of any request to fetch the data in `values`. This can be used to generate
+    loading and error states of the component.
+  - `retry: () => void`: A function to manually trigger another request of
+    missing data. Retries will also be called by the configuration set in the `retry`
+    prop for `BnCProvider`.
+
+#### `BnCStatus`
+
+An object with the keys `LOADING`, `ERROR`, and `COMPLETE`. The `status` key in the argument of the `BnC` component's render prop will always be called with one of these values.

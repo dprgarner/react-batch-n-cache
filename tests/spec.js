@@ -284,6 +284,9 @@ it('updates the throttle debounce time', async () => {
   fireEvent.click(getByText('Show'));
   await delay(100);
   expect(fetch).toHaveBeenCalledTimes(1);
+
+  await delay(1000);
+  expect(fetch).toHaveBeenCalledTimes(2);
 });
 
 it('caches values', async () => {

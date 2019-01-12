@@ -65,7 +65,7 @@ class Demo extends React.Component {
 
   render() {
     return (
-      <div>
+      <main>
         <p>This is the demo page for trying out Batch 'n Cache.</p>
         <BnCProvider
           fetch={ids => {
@@ -94,7 +94,7 @@ class Demo extends React.Component {
           <Dog breed="boxer" />
           <Dog breed="dane-great" />
         </DogProvider>
-      </div>
+      </main>
     );
   }
 }
