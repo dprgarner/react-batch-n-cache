@@ -5,13 +5,14 @@ env:
 extends:
   - airbnb
   - plugin:jest/recommended
-  - prettier
+  - plugin:prettier/recommended
 
 parser: babel-eslint
 
 plugins:
   - babel
   - jest
+  - prettier
 
 rules:
   arrow-parens:

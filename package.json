@@ -8,6 +8,7 @@
   "scripts": {
     "start": "webpack-dev-server",
     "build": "babel src -d lib --delete-dir-on-start --ignore src/**/*.spec.js",
+    "lint": "eslint -c .eslintrc.yml src/**/*",
     "test": "jest"
   },
   "repository": {
@@ -36,11 +37,13 @@
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-jest": "^21.26.2",
     "eslint-plugin-jsx-a11y": "^6.1.1",
+    "eslint-plugin-prettier": "^3.0.1",
     "eslint-plugin-react": "^7.11.0",
     "html-webpack-plugin": "^3.2.0",
     "jest": "^23.6.0",
     "jest-dom": "^2.1.0",
     "node-fetch": "^2.2.1",
+    "prettier": "^1.16.4",
     "react": "^16.6.0",
     "react-dom": "^16.6.0",
     "react-hot-loader": "^4.3.11",
