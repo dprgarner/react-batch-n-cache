@@ -66,6 +66,7 @@ class Demo extends React.Component {
   render() {
     return (
       <main>
+        <h1>React Batch 'n Cache</h1>
         <p>This is the demo page for trying out Batch 'n Cache.</p>
         <BnCProvider
           fetch={ids => {
