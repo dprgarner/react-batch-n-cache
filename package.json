@@ -1,6 +1,6 @@
 {
   "name": "react-batch-n-cache",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A library component for batching and catching asynchronous requests.",
   "main": "lib/index.js",
   "author": "David Garner",
@@ -16,7 +16,9 @@
     "type": "git",
     "url": "https://github.com/dprgarner/react-batch-n-cache.git"
   },
-  "files": ["/lib"],
+  "files": [
+    "/lib"
+  ],
   "dependencies": {
     "lodash": "^4.17.11",
     "prop-types": "^15.6.2"
