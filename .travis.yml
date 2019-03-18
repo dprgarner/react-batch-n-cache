@@ -8,6 +8,7 @@ jobs:
       script: yarn test
     - script: yarn lint
     - stage: deploy
+      script: skip
       deploy:
         provider: npm
         email: dprgarner@gmail.com
