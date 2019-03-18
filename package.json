@@ -8,7 +8,7 @@
   "scripts": {
     "start": "webpack-dev-server",
     "build": "babel src -d lib --delete-dir-on-start --ignore src/**/*.spec.js",
-    "lint": "eslint -c .eslintrc.yml src/**/*",
+    "lint": "eslint -c .eslintrc.yml src/**/* tests/**/*",
     "test": "jest"
   },
   "repository": {

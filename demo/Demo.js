@@ -48,7 +48,7 @@ const Dog = props => (
           className="card"
           style={{
             backgroundSize: 'cover',
-            backgroundImage: `url(${data[props.breed]})`,
+            backgroundImage: `url(${data[0]})`,
           }}
         />
       )
@@ -72,9 +72,7 @@ class Demo extends React.Component {
           fetch={ids => {
             this.setState(s => ({ calls: [...s.calls, ids] }));
             console.log('fetching', ids);
-            return delay(500).then(() =>
-              _.fromPairs(ids.map(id => [id, 'done'])),
-            );
+            return delay(500).then(() => _.fromPairs(ids.map(id => [id, id])));
           }}
         >
           <DemoCard values={[1, 2, 3]} />

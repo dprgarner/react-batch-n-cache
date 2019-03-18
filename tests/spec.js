@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import PropTypes from 'prop-types';
 import _ from 'lodash';
 import React from 'react';
@@ -15,7 +16,7 @@ import * as utils from 'src/utils';
 
 const { delay } = utils;
 
-const toObj = ids => _.fromPairs(ids.map(id => [id, true]));
+const toObj = ids => _.fromPairs(ids.map(id => [id, id]));
 
 beforeEach(() => {
   console.error = jest.fn();
@@ -51,7 +52,7 @@ it('fetches and re-renders', async () => {
   const fetch = jest.fn(ids => Promise.resolve(toObj(ids)));
   const { getByText } = render(
     <BnCProvider fetch={fetch}>
-      <BnC values={[1, 2, 3]}>{({ data }) => Object.keys(data)}</BnC>
+      <BnC values={[1, 2, 3]}>{({ data }) => JSON.stringify(data)}</BnC>
     </BnCProvider>,
   );
   await waitForElement(() => [getByText(/1/), getByText(/2/), getByText(/3/)], {
@@ -66,8 +67,8 @@ it('batches fetches', async () => {
   const fetch = jest.fn(ids => Promise.resolve(toObj(ids)));
   const { getByText } = render(
     <BnCProvider fetch={fetch}>
-      <BnC values={[1, 2]}>{({ data }) => Object.keys(data)}</BnC>
-      <BnC values={[3, 4]}>{({ data }) => Object.keys(data)}</BnC>
+      <BnC values={[1, 2]}>{({ data }) => JSON.stringify(data)}</BnC>
+      <BnC values={[3, 4]}>{({ data }) => JSON.stringify(data)}</BnC>
     </BnCProvider>,
   );
   await waitForElement(() => [getByText(/1/), getByText(/4/)], {
@@ -82,8 +83,8 @@ it('only requests each key once', async () => {
   const fetch = jest.fn(ids => Promise.resolve(toObj(ids)));
   const { getByText } = render(
     <BnCProvider fetch={fetch}>
-      <BnC values={[1, 2]}>{({ data }) => Object.keys(data)}</BnC>
-      <BnC values={[2, 3]}>{({ data }) => Object.keys(data)}</BnC>
+      <BnC values={[1, 2]}>{({ data }) => JSON.stringify(data)}</BnC>
+      <BnC values={[2, 3]}>{({ data }) => JSON.stringify(data)}</BnC>
     </BnCProvider>,
   );
   await waitForElement(() => [getByText(/1/), getByText(/2/), getByText(/3/)], {
@@ -175,7 +176,7 @@ it('retains loading state for previously-mounted cpts', async () => {
     <BnCProvider fetch={fetch}>
       <BnC values={[1]}>
         {({ data, status }) =>
-          status === BnCStatus.COMPLETE && Object.keys(data)
+          status === BnCStatus.COMPLETE && JSON.stringify(data)
         }
       </BnC>
       <Toggle>
@@ -183,7 +184,7 @@ it('retains loading state for previously-mounted cpts', async () => {
           on && (
             <BnC values={[2]}>
               {({ data, status }) =>
-                status === BnCStatus.COMPLETE && Object.keys(data)
+                status === BnCStatus.COMPLETE && JSON.stringify(data)
               }
             </BnC>
           )
@@ -380,7 +381,7 @@ it('allows retries on error', async () => {
           if (status === BnCStatus.LOADING) {
             return 'loading';
           }
-          return data[1];
+          return data[0];
         }}
       </BnC>
     </BnCProvider>,

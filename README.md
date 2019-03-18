@@ -9,8 +9,8 @@ Inspired by DataLoader and Apollo Client.
 ## Motivation
 
 The aim of this library is to provide a simple-to-use state-managing component
-that covers a good range of simple and common use cases for client-side data-
-fetching, and to implement this in a declarative manner using React.
+that covers a good range of simple and common use cases for client-side data-fetching,
+and to implement this in a declarative manner using React.
 
 The primary inspiration for this component is the Query React component in the
 [React Apollo library for Apollo Client][react-apollo]. The following example
@@ -78,7 +78,7 @@ API requests can be dramatically reduced. (And yes, there is an [Apollo Client l
 
 ## Overview
 
-This library provides a generating function `createLoader`, which generates a
+This library exports a generating function `createLoader`, which generates a
 Provider/Consumer pair, linked by React Context. The Provider accepts a
 `fetch` function prop which behaves similarly to a batch-loading function from
 DataLoader. When a set of Consumers are rendered below it in the tree, the
@@ -87,7 +87,7 @@ in their props. The Provider automatically de-duplicates requests, avoids
 requesting the same data multiple times, and batches requests made within a
 short time period into a single HTTP request. The consumers re-render with the
 respective data when the request is complete, with the loading state if the
-network request is in progress, and with the error state state if the network
+network request is in progress, and with the error state if the network
 request has failed.
 
 ### Example Usage
@@ -109,7 +109,7 @@ const App = () => (
 
 // Using the Consumer
 const Main = () => (
-  <BnC values={['a', 'b', 'c']}>
+  <BnC values={['item-a-id', 'item-b-id', 'item-c-id']}>
     {({ status, data, retry }) => {
       if (status === BnCStatus.LOADING) {
         return <span>Loading...</span>;
@@ -122,12 +122,13 @@ const Main = () => (
           </div>
         );
       }
+      const [itemA, itemB, itemC] = data;
 
       return (
         <ul>
-          <li>{data.a}</li>
-          <li>{data.b}</li>
-          <li>{data.c}</li>
+          <li>{itemA}</li>
+          <li>{itemB}</li>
+          <li>{itemC}</li>
         </ul>
       );
     }}
@@ -185,10 +186,10 @@ this via a render prop with loading and error states.
 - `children: { data, status, retry } => React.Node`: A render prop for determining
   how to render the fetched data. The render prop is called with a single
   argument with the following keys:
-  - `data: <Object>`: an object with keys corresponding to the `values` prop items
-    for data that has been successfully fetched. The keys will be missing if the
-    data has not loaded yet or has failed to load. The data will be available
-    if it was fetched and cached by another `BnC` component mount.
+  - `data: <Array>`: an array where the entries are the fetched values of the
+    data, in the same order as the `values` prop. Entries corresponding to data
+    that has not yet loaded or failed to load will be `undefined`. The data will
+    be available if it was fetched and cached by another `BnC` component mount.
   - `status: BnCStatus.LOADING | BnCStatus.ERROR | BnCStatus.COMPLETE`: reports
     the status of any request to fetch the data in `values`. This can be used to generate
     loading and error states of the component.

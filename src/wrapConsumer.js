@@ -70,11 +70,8 @@ export default function wrapConsumer(Consumer) {
         status = BnCStatus.ERROR;
       } else {
         status = BnCStatus.COMPLETE;
-        data = _.fromPairs(
-          this.props.values.map(id => [
-            id,
-            (this.props.ctx.state[id] || {}).data,
-          ]),
+        data = this.props.values.map(
+          id => (this.props.ctx.state[id] || {}).data,
         );
       }
 
