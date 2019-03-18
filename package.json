@@ -1,6 +1,6 @@
 {
   "name": "react-batch-n-cache",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A library component for batching and catching asynchronous requests.",
   "main": "lib/index.js",
   "author": "David Garner",
