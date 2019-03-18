@@ -206,7 +206,7 @@ it('retains loading state for previously-mounted cpts', async () => {
 
 it('does not re-render consumers with distinct values', async () => {
   const { BnC, BnCProvider } = createLoader();
-  const fetch = jest.fn(ids => Promise.resolve(toObj(ids)));
+  const fetch = jest.fn(ids => delay(100).then(() => toObj(ids)));
   const renderProp1 = jest.fn(() => null);
   const renderProp2 = jest.fn(() => null);
   const { getByText } = render(
@@ -216,15 +216,16 @@ it('does not re-render consumers with distinct values', async () => {
     </BnCProvider>,
   );
   await delay(10);
-  expect(renderProp1).toHaveBeenCalledTimes(2);
+  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(renderProp1).toHaveBeenCalledTimes(1);
 
   fireEvent.click(getByText('Show'));
   await delay(10);
   expect(fetch).toHaveBeenCalledTimes(2);
 
   await delay(10);
-  expect(renderProp1).toHaveBeenCalledTimes(2);
-  expect(renderProp2).toHaveBeenCalledTimes(2);
+  expect(renderProp1).toHaveBeenCalledTimes(1);
+  expect(renderProp2).toHaveBeenCalledTimes(1);
 });
 
 it('fetches on changing values', async () => {

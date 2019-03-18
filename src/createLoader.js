@@ -4,8 +4,8 @@ import wrapProvider from './wrapProvider';
 import wrapConsumer from './wrapConsumer';
 
 export default function createLoader() {
-  const { Provider, Consumer } = React.createContext();
-  const BnCProvider = wrapProvider(Provider);
-  const BnC = wrapConsumer(Consumer);
+  const BnCContext = React.createContext();
+  const BnCProvider = wrapProvider(BnCContext.Provider);
+  const BnC = wrapConsumer(BnCContext);
   return { BnCProvider, BnC };
 }
