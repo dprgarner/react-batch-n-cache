@@ -198,8 +198,21 @@ this via a render prop with loading and error states.
 
 #### `BnCStatus`
 
-An object with the keys `LOADING`, `ERROR`, and `COMPLETE`. The `status` key in the argument of the `BnC` component's render prop will always be called with one of these values.
+An object with the keys `LOADING`, `ERROR`, and `COMPLETE`. The `status` key
+in the argument of the `BnC` component's render prop will always be called
+with one of these values.
 
 ### Releasing
 
-Releases to NPM are performed via Travis when tagged commits are pushed to the repo.
+Releases to NPM are performed via Travis when tagged commits are pushed to the
+repo. Create a new tagged commit and bump the version in package.json with:
+
+```bash
+npm release patch
+```
+
+and push the new commits and tags with:
+
+```bash
+git push && git push --tags
+```
