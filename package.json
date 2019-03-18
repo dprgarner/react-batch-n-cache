@@ -9,11 +9,17 @@
     "start": "webpack-dev-server",
     "build": "babel src -d lib --delete-dir-on-start --ignore src/**/*.spec.js",
     "lint": "eslint -c .eslintrc.yml src/**/*",
-    "test": "jest"
+    "test": "jest",
+    "prepublish": "yarn build"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/dprgarner/react-batch-n-cache.git"
+  },
+  "files": ["/lib"],
+  "dependencies": {
+    "lodash": "^4.17.11",
+    "prop-types": "^15.6.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.1.2",
@@ -93,9 +99,5 @@
       "**/*.js"
     ],
     "setupTestFrameworkScriptFile": "<rootDir>/tests/setup.js"
-  },
-  "dependencies": {
-    "lodash": "^4.17.11",
-    "prop-types": "^15.6.2"
   }
 }
