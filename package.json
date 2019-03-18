@@ -10,7 +10,7 @@
     "build": "babel src -d lib --delete-dir-on-start --ignore src/**/*.spec.js",
     "lint": "eslint -c .eslintrc.yml src/**/*",
     "test": "jest",
-    "prepublish": "yarn build"
+    "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
