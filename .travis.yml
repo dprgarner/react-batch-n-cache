@@ -7,13 +7,16 @@ jobs:
     - stage: test
       script: yarn test
     - script: yarn lint
+
     - stage: deploy
       script: skip
+      before_deploy: yarn build
       deploy:
         provider: npm
         email: dprgarner@gmail.com
-        api_key:
-          secure: Vj/QlC7+Y7q2mf23H7Rr+9XIxmGwJ5f6+MO+9QRcTv0KeRKeM8+3/ofsATQ/xjkpezSZUWLFoL5WETBwl2/GE0Y0f7czOSc4sEpovK0wqkyIC96hy+ntZCaWpk70z/MXb0llE7t0KKlP55lY19qRTKGcB3FIxrVgsAevccz/ru5QLN3TbG2C78MRWUSJLJPFeL+wNFk1jeyhXWylLVEDv3OayziqYSXFCp3QOmz5NtV2xwMkPnPBwjN8D04t0MLNus3hJouhflVnqihR+5SWkTK9dh6v4KIM5m/pV+X2y8jRVj0BMKrpx6FeP7aKgCNevXw8OgvpUDUiLjjoojR8DoHGYENRefAXMJS/sDG/J76jUBkXzVjaKMmUzTCP3VLuBuaHB78lRPkqU2lMGaDLuZxfoKnkAgL+KiuT8eGbqkppq3PvvJEoRF1PRNXfMFEdBRXShDjJzIKsvr3bbqZ6AO8gdBlGZR4+Q1raODZrjppQml1H/xJTs6/sWSjaKNqzyAtR+dyoQR/AGnADebmtnzBDscjMw6Z3ChRfcvGj7HEdIcSxLUHqjq/bEM1A8ox+4ztfy5qF1pJjqGWq0QQPDCkffQlnQWgSJdnkWL4cEwCshhmuVctFl5HfOiLRcgE9S3vOCh5+m2+uTB7COSutCseYROG0zdqcYDCQ/EEiSCY=
+        skip_cleanup: true
         on:
           tags: true
           repo: dprgarner/react-batch-n-cache
+        api_key:
+          secure: Vj/QlC7+Y7q2mf23H7Rr+9XIxmGwJ5f6+MO+9QRcTv0KeRKeM8+3/ofsATQ/xjkpezSZUWLFoL5WETBwl2/GE0Y0f7czOSc4sEpovK0wqkyIC96hy+ntZCaWpk70z/MXb0llE7t0KKlP55lY19qRTKGcB3FIxrVgsAevccz/ru5QLN3TbG2C78MRWUSJLJPFeL+wNFk1jeyhXWylLVEDv3OayziqYSXFCp3QOmz5NtV2xwMkPnPBwjN8D04t0MLNus3hJouhflVnqihR+5SWkTK9dh6v4KIM5m/pV+X2y8jRVj0BMKrpx6FeP7aKgCNevXw8OgvpUDUiLjjoojR8DoHGYENRefAXMJS/sDG/J76jUBkXzVjaKMmUzTCP3VLuBuaHB78lRPkqU2lMGaDLuZxfoKnkAgL+KiuT8eGbqkppq3PvvJEoRF1PRNXfMFEdBRXShDjJzIKsvr3bbqZ6AO8gdBlGZR4+Q1raODZrjppQml1H/xJTs6/sWSjaKNqzyAtR+dyoQR/AGnADebmtnzBDscjMw6Z3ChRfcvGj7HEdIcSxLUHqjq/bEM1A8ox+4ztfy5qF1pJjqGWq0QQPDCkffQlnQWgSJdnkWL4cEwCshhmuVctFl5HfOiLRcgE9S3vOCh5+m2+uTB7COSutCseYROG0zdqcYDCQ/EEiSCY=
