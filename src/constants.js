@@ -1,5 +1,5 @@
 export default {
   LOADING: 'LOADING',
-  ERROR: 'ERROR',
+  ERRORED: 'ERRORED',
   COMPLETE: 'COMPLETE',
 };

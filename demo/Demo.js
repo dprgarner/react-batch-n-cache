@@ -29,7 +29,7 @@ const DogProvider = props => (
     fetch={ids =>
       fetch(`/dog?${ids.map(id => `breed=${id}`).join('&')}`)
         .then(d => d.json())
-        .then(d => d.dogs)
+        .then(d => ids.map(id => d.dogs[id]))
     }
   >
     {props.children}
@@ -72,7 +72,7 @@ class Demo extends React.Component {
           fetch={ids => {
             this.setState(s => ({ calls: [...s.calls, ids] }));
             console.log('fetching', ids);
-            return delay(500).then(() => _.fromPairs(ids.map(id => [id, id])));
+            return delay(500).then(() => ids);
           }}
         >
           <DemoCard values={[1, 2, 3]} />

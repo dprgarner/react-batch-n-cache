@@ -13,6 +13,7 @@ plugins:
   - babel
   - jest
   - prettier
+  - react-hooks
 
 rules:
   arrow-parens:
@@ -27,8 +28,10 @@ rules:
     - error
     - devDependencies:
         - ./demo/**/*.js
-        - ./tests/**/*.js
+        - ./src/**/*.spec.js
         - webpack.config.js
+  react-hooks/rules-of-hooks: error
+  react-hooks/exhaustive-deps: warn
 
 settings:
   import/resolver:

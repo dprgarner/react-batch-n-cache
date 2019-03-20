@@ -155,12 +155,12 @@ caching.
 
 ##### Props
 
-- `fetch: Array<String> => Promise<Object>`: When at least one `BnC` component
+- `fetch: Array<String> => Promise<Array<Any>>`: When at least one `BnC` component
   is rendered below this component in the render tree, the `fetch` prop will be
   called with an array of the IDs given as props to the Consumer components. The
   function given to the `fetch` prop should generate a promise which resolves to
-  an object with the array entries as keys and the remotely-fetched data as the
-  corresponding values.
+  an array containing the remotely-fetched data in the same order as the IDs in
+  the argument.
 - `throttle: Number?`: The time in milliseconds to wait between `BnC` components
   being rendered in the tree before triggering a `fetch` request. Defaults to 0.
 - `retry: { delay?: <number> | 'exponential', max?: <number> }`: this prop
@@ -217,3 +217,10 @@ and push the new commits and tags with:
 ```bash
 git push && git push --tags
 ```
+
+### Notes
+
+- Move all that not-really-React-component-state stuff out of the Provider
+- Memoise or cache whatever gets passes down to the Provider: should just be `fetch` and perhaps a new `getData` fn. Maybe `subscribe`?
+- Rewrite Consumer to not use shouldComponentUpdate, but instead to subscribe to the provided context.
+- Hooks?
