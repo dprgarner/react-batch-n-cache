@@ -6,6 +6,99 @@ Inspired by DataLoader and Apollo Client.
 [![npm version](https://badge.fury.io/js/react-batch-n-cache.svg)](https://badge.fury.io/js/react-batch-n-cache)
 [![Build Status](https://travis-ci.org/dprgarner/react-batch-n-cache.svg?branch=master)](https://travis-ci.org/dprgarner/react-batch-n-cache)
 
+## Overview
+
+This library exports a generating function `createLoader`, which generates a
+Provider Component, a Consumer Component, and an equivalent Hook,
+linked to the provider by React Context. The Provider accepts a
+`fetch` prop which takes an asynchronous function loading a batch of data from a
+set of values.
+When a set of Consumers components or components using the Hook are
+rendered below the provider in the tree, the
+batch-loading function is triggered with the values requested by the consumers.
+The Provider automatically de-duplicates requests, avoids
+requesting the same data multiple times, and batches requests made within a
+short time period into a single HTTP request. The consumers re-render with the
+respective data when the request is complete, with the loading state if the
+network request is in progress, and with the error state if the network
+request has failed.
+
+### Example Usage
+
+```jsx
+import { createLoader, BnCStatus } from 'react-batch-n-cache';
+const { BnCProvider, BnC, useBnC } = createLoader();
+
+// Using the Provider
+const App = () => (
+  <BnCProvider
+    throttle={10}
+    fetch={ids => fetchFromAPI(ids).then(res => res.data)}
+    retry={{ delay: 'exponential', max: 5 }}
+  >
+    <Consumer />
+    <ConsumerWithHook />
+  </BnCProvider>
+);
+
+// Using the Consumer Component
+const Consumer = () => (
+  <BnC values={['item-a-id', 'item-b-id', 'item-c-id']}>
+    {({ status, data, retry }) => {
+      if (status === BnCStatus.LOADING) {
+        return <span>Loading...</span>;
+      }
+      if (status === BnCStatus.ERROR) {
+        return (
+          <div className="error">
+            Something went wrong.
+            <button onClick={() => retry()}>Retry</button>
+          </div>
+        );
+      }
+      const [itemA, itemB, itemC] = data;
+
+      return (
+        <ul>
+          <li>{itemA}</li>
+          <li>{itemB}</li>
+          <li>{itemC}</li>
+        </ul>
+      );
+    }}
+  </BnC>
+);
+
+// Using the Hook
+const ConsumerWithHook = () => {
+  const { status, data, retry } = useBnC([
+    'item-a-id',
+    'item-b-id',
+    'item-c-id',
+  ]);
+  if (status === BnCStatus.LOADING) {
+    return <span>Loading...</span>;
+  }
+  if (status === BnCStatus.ERROR) {
+    return (
+      <div className="error">
+        Something went wrong.
+        <button onClick={() => retry()}>Retry</button>
+      </div>
+    );
+  }
+  const [itemA, itemB, itemC] = data;
+
+  return (
+    <ul>
+      <li>{itemA}</li>
+      <li>{itemB}</li>
+      <li>{itemC}</li>
+    </ul>
+  );
+};
+```
+
 ## Motivation
 
 The aim of this library is to provide a simple-to-use state-managing component
@@ -76,76 +169,16 @@ API requests can be dramatically reduced. (And yes, there is an [Apollo Client l
 [dataloader]: https://github.com/facebook/dataloader
 [batch-http]: https://www.apollographql.com/docs/link/links/batch-http.html
 
-## Overview
-
-This library exports a generating function `createLoader`, which generates a
-Provider/Consumer pair, linked by React Context. The Provider accepts a
-`fetch` function prop which behaves similarly to a batch-loading function from
-DataLoader. When a set of Consumers are rendered below it in the tree, the
-batch-loading function is triggered with the values requested by the consumers
-in their props. The Provider automatically de-duplicates requests, avoids
-requesting the same data multiple times, and batches requests made within a
-short time period into a single HTTP request. The consumers re-render with the
-respective data when the request is complete, with the loading state if the
-network request is in progress, and with the error state if the network
-request has failed.
-
-### Example Usage
-
-```jsx
-import { createLoader, BnCStatus } from 'react-batch-n-cache';
-const { BnCProvider, BnC } = createLoader();
-
-// Using the Provider
-const App = () => (
-  <BnCProvider
-    throttle={10}
-    fetch={ids => fetchFromAPI(ids).then(res => res.data)}
-    retry={{ delay: 'exponential', max: 5 }}
-  >
-    <Main />
-  </BnCProvider>
-);
-
-// Using the Consumer
-const Main = () => (
-  <BnC values={['item-a-id', 'item-b-id', 'item-c-id']}>
-    {({ status, data, retry }) => {
-      if (status === BnCStatus.LOADING) {
-        return <span>Loading...</span>;
-      }
-      if (status === BnCStatus.ERROR) {
-        return (
-          <div className="error">
-            Something went wrong.
-            <button onClick={() => retry()}>Retry</button>
-          </div>
-        );
-      }
-      const [itemA, itemB, itemC] = data;
-
-      return (
-        <ul>
-          <li>{itemA}</li>
-          <li>{itemB}</li>
-          <li>{itemC}</li>
-        </ul>
-      );
-    }}
-  </BnC>
-);
-```
-
 ### API
 
 #### `createLoader`
 
 A function that generates a React Batch 'n Cache Provider component class,
-`BnCProvider`, and a Consumer component class, `BnC`.
+`BnCProvider`, a Consumer component class `BnC`, and a Hook `useBnC`.
 
 ```jsx
 import { createLoader } from 'react-batch-n-cache';
-const { BnCProvider, BnC } = createLoader();
+const { BnCProvider, BnC, useBnC } = createLoader();
 ```
 
 #### `<BnCProvider>`
@@ -178,7 +211,7 @@ this via a render prop with loading and error states.
 
 ##### Props
 
-- `values: Array<String>`: An array of string values representing the IDs of the
+- `ids: Array<String>`: An array of string values representing the IDs of the
   data that the component needs to request from the remote data source before
   rendering. These will be called as the argument to the `fetch` prop of the
   `BnCProvider` above the component in the tree, along with any other `values`
@@ -186,7 +219,7 @@ this via a render prop with loading and error states.
 - `children: { data, status, retry } => React.Node`: A render prop for determining
   how to render the fetched data. The render prop is called with a single
   argument with the following keys:
-  - `data: <Array>`: an array where the entries are the fetched values of the
+  - `data: <Array<Any>>`: an array where the entries are the fetched values of the
     data, in the same order as the `values` prop. Entries corresponding to data
     that has not yet loaded or failed to load will be `undefined`. The data will
     be available if it was fetched and cached by another `BnC` component mount.
@@ -197,11 +230,26 @@ this via a render prop with loading and error states.
     missing data. Retries will also be called by the configuration set in the `retry`
     prop for `BnCProvider`.
 
+#### `useBnC`
+
+A React Hook version of the consumer component, with signature
+
+```js
+(values: Array<String>) => ({ data: <Array<Any>>, status: <BnCStatus>, retry: () => void })
+
+```
+
+The return value of the Hook has the same form as the render prop arguments of the Consumer component.
+
 #### `BnCStatus`
 
-An object with the keys `LOADING`, `ERROR`, and `COMPLETE`. The `status` key
-in the argument of the `BnC` component's render prop will always be called
-with one of these values.
+```js
+import { BnCStatus } from 'react-batch-n-cache';
+```
+
+An object with the keys `LOADING`, `COMPLETE`, and `ERRORED`. The `status` key
+in the argument of the `BnC` component's render prop and in the return value
+of the `useBnC` Hook will always be called with one of these values.
 
 ### Releasing
 
@@ -217,10 +265,3 @@ and push the new commits and tags with:
 ```bash
 git push && git push --tags
 ```
-
-### Notes
-
-- Move all that not-really-React-component-state stuff out of the Provider
-- Memoise or cache whatever gets passes down to the Provider: should just be `fetch` and perhaps a new `getData` fn. Maybe `subscribe`?
-- Rewrite Consumer to not use shouldComponentUpdate, but instead to subscribe to the provided context.
-- Hooks?
