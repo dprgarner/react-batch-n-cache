@@ -257,7 +257,7 @@ Releases to NPM are performed via Travis when tagged commits are pushed to the
 repo. Create a new tagged commit and bump the version in package.json with:
 
 ```bash
-npm release patch
+npm version patch
 ```
 
 and push the new commits and tags with:
